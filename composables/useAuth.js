@@ -1,15 +1,21 @@
 export default () => {
-    const useAuthToken = () => useState('auth_token')
-    const useAuthUser = () => useState('auth_user')
+    const useAuthToken = () => useState('authToken')
+    const useAuthUser = () => useState('authUser')
+    const useAuthLoading = () => useState('authLoading', () => true)
 
     const setToken = (newToken) => {
-        const authToken = useAuthToken
+        const authToken = useAuthToken()
         authToken.value = newToken
     }
 
     const setUser = (newUser) => {
-        const authUser = useAuthUser
+        const authUser = useAuthUser()
         authUser.value = newUser
+    }
+
+    const setIsLoading = (value) => {
+        const authLoading = useAuthLoading()
+        authLoading.value = value
     }
 
     const login = ({ username, password }) => {
@@ -45,11 +51,11 @@ export default () => {
         })
     }
 
-    const initAuth = () => {
+    const getUser = () => {
         return new Promise(async (resolve, reject) => {
             try {
-                await refreshToken()
-
+                const data = await useFetchApi('/api/auth/user')
+                setUser(data.user)
                 resolve(true)
             } catch (error) {
                 reject(error)
@@ -57,9 +63,27 @@ export default () => {
         })
     }
 
+    const initAuth = () => {
+        return new Promise(async (resolve, reject) => {
+            setIsLoading(true)
+            try {
+                await refreshToken()
+                await getUser()
+
+                resolve(true)
+            } catch (error) {
+                reject(error)
+            } finally {
+                setIsLoading(false)
+            }
+        })
+    }
+
     return {
         login,
         useAuthUser,
+        useAuthToken,
+        useAuthLoading,
         initAuth
     }
 }
