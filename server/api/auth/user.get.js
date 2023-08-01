@@ -1,5 +1,8 @@
+import { userTransformer } from "../../transformers/user"
+
 export default defineEventHandler(async (event) => {
-    const endpoints = [
-        '/api/auth/user'
-    ]
+        
+    return {
+        user: userTransformer(event.context.auth?.user)
+    }
 })
